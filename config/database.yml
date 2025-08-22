@@ -81,9 +81,10 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: kintai_api_production
-    username: kintai_api
-    password: <%= ENV["KINTAI_API_DATABASE_PASSWORD"] %>
+    # database: kintai_api_production
+    # username: kintai_api
+    # password: <%= ENV["KINTAI_API_DATABASE_PASSWORD"] %>
+    url: <%= ENV["DATABASE_URL"] %>
   cache:
     <<: *primary_production
     database: kintai_api_production_cache
