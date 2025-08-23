@@ -5,5 +5,9 @@ Rails.application.routes.draw do
     namespace :timeclock do
       resources :time_entries, only: [ :index, :create ]
     end
+
+    namespace :attendance do
+      get "my/daily", to: "daily#show"
+    end
   end
 end

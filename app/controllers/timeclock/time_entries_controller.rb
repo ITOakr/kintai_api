@@ -5,7 +5,7 @@ module Timeclock
       if entry.save
         render json: entry, status: :created
       else
-        render json: { errors: entry.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: entry.errors.full_messages }, status: :unprocessable_content
       end
     end
 

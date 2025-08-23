@@ -31,7 +31,7 @@ RSpec.describe "Timeclock::TimeEntries", type: :request do
           source: "web"
         }
         post "/v1/timeclock/time_entries", params: payload
-        expect(response).to have_http_status(:unprocessable_entity)
+        expect(response).to have_http_status(:unprocessable_content)
       end
     end
   end
