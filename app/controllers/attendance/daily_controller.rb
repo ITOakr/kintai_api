@@ -4,7 +4,7 @@ module Attendance
       user_id = params.require(:user_id)
       date = Date.parse(params.require(:date))
 
-      attendance_summary = Calculator.summarize_day(user_id: user_id, data: date)
+      attendance_summary = Attendance::Calculator.summarize_day(user_id: user_id, data: date)
 
       render json: {
         date: attendance_summary.date.to_s,
