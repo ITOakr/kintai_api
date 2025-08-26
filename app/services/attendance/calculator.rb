@@ -1,6 +1,6 @@
 module Attendance
   class Calculator
-    Result = Struct.new(:date, :start_at, :end_at, :work_minutes, :status, keyword_init: true)
+    Result = Struct.new(:date, :start_at, :end_at, :work_minutes, :break_minutes, :status, keyword_init: true)
 
     def self.summarize_day(user_id:, data:)
       range = data.beginning_of_day..data.end_of_day
@@ -20,13 +20,21 @@ module Attendance
           0
         end
 
-        status = determine_status(first_in, last_out, base.exists?)
+      break_mins = 0
+      if first_in && last_out
+        break_mins = sum_break_minutes_within(base, first_in..last_out)
+        # 休憩時間が勤務時間を越えないように
+        break_mins = [ break_mins, work_mins ].min
+      end
 
-       Result.new(
+      status = determine_status(first_in, last_out, base.exists?)
+
+      Result.new(
         date: data,
         start_at: first_in,
         end_at: last_out,
-        work_minutes: work_mins,
+        work_minutes: [ work_mins - break_mins, 0 ].max,
+        break_minutes: break_mins,
         status: status
       )
     end
@@ -41,6 +49,30 @@ module Attendance
       else
         "not_started"
       end
+    end
+
+    def self.sum_break_minutes_within(scope, work_range)
+      brks = scope.where(kind: [ :break_start, :break_end ]).order(:happened_at).pluck(:kind, :happened_at)
+
+      stack = []
+      total = 0
+
+      brks.each do |kind, ts|
+        if kind.to_s == "break_start"
+          stack << ts
+        elsif kind.to_s == "break_end"
+          start_ts = stack.pop
+          next unless start_ts
+
+          s = [ start_ts, work_range.begin ].max
+          e = [ ts, work_range.end ].min
+          next if e <= s
+
+          total += ((e - s) / 60).to_i
+        end
+      end
+
+      total
     end
   end
 end

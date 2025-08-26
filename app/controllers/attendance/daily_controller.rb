@@ -14,7 +14,7 @@ module Attendance
         },
         totals: {
           work: attendance_summary.work_minutes,
-          break: 0,
+          break: attendance_summary.break_minutes,
           overtime: 0,
           night: 0,
           holiday: 0
