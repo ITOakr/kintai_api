@@ -1,9 +1,9 @@
 module Attendance
   class Calculator
-    Result = Struct.new(:date, :start_at, :end_at, :work_minutes, :break_minutes, :status, keyword_init: true)
+    Result = Struct.new(:date, :start_at, :end_at, :work_minutes, :break_minutes, :status, keyword_init: true)  # 計算結果を格納する構造体
 
-    def self.summarize_day(user_id:, data:)
-      range = data.beginning_of_day..data.end_of_day
+    def self.summarize_day(user_id:, date:)
+      range = date.beginning_of_day..date.end_of_day
       base = TimeEntry.where(user_id: user_id, happened_at: range)
 
       # enum により scope が生える: clock_in, clock_out
@@ -30,29 +30,29 @@ module Attendance
       status = determine_status(first_in, last_out, base.exists?)
 
       Result.new(
-        date: data,
+        date: date,
         start_at: first_in,
         end_at: last_out,
-        work_minutes: [ work_mins - break_mins, 0 ].max,
+        work_minutes: [ work_mins - break_mins, 0 ].max,  # 休憩時間を差し引いた実働時間（マイナスにならないように）
         break_minutes: break_mins,
         status: status
       )
     end
 
     def self.determine_status(first_in, last_out, has_entries)
-      if first_in && last_out
+      if first_in && last_out # 退勤済み
         "closed"
-      elsif first_in
+      elsif first_in # 出勤済み、未退勤
         "open"
-      elsif has_entries
+      elsif has_entries # 出退勤いずれかが無い不整合データ
         "inconsistent_data"
-      else
+      else # 全くデータが無い
         "not_started"
       end
     end
 
     def self.sum_break_minutes_within(scope, work_range)
-      brks = scope.where(kind: [ :break_start, :break_end ]).order(:happened_at).pluck(:kind, :happened_at)
+      brks = scope.where(kind: [ :break_start, :break_end ]).order(:happened_at).pluck(:kind, :happened_at) # [ [kind, happened_at], ... ]
 
       stack = []
       total = 0

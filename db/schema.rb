@@ -10,18 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_21_111321) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_26_141634) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "time_entries", force: :cascade do |t|
     t.integer "user_id", null: false
-    t.integer "kind"
+    t.integer "kind", null: false
     t.datetime "happened_at", null: false
     t.string "source", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["happened_at"], name: "index_time_entries_on_happened_at"
+    t.index ["user_id", "happened_at"], name: "index_time_entries_on_user_id_and_happened_at"
     t.index ["user_id"], name: "index_time_entries_on_user_id"
+    t.check_constraint "kind = ANY (ARRAY[0, 1, 2, 3])", name: "chk_time_entries_kind_enum"
   end
 end
