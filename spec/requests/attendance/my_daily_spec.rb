@@ -3,6 +3,9 @@
 require "rails_helper"
 
 RSpec.describe "Attendance::Daily", type: :request do
+  before do
+    User.find_or_create_by!(id: 1) { |u| u.name = "Test"; u.email = "test@example.com" }
+  end
   describe "GET /v1/attendance/my/daily" do
     context "正常なデータが存在する場合" do
       it "出勤と退勤の両方がある場合、正しいサマリと'closed'ステータスを返す" do

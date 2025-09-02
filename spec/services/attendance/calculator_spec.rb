@@ -5,6 +5,9 @@ require "rails_helper"
 RSpec.describe Attendance::Calculator do
   let(:date1) { Date.parse("2025-08-21") }
   let(:date2) { Date.parse("2025-08-22") }
+  before do
+    User.find_or_create_by!(id: 1) { |u| u.name = "Test"; u.email = "test@example.com" }
+  end
 
   it "打刻が一件も存在しない場合、'not_started'が返されること" do
     r = described_class.summarize_day(user_id: 1, date: date1)

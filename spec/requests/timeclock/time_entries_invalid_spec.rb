@@ -3,6 +3,9 @@ require "rails_helper"
 RSpec.describe "Timeclock::TimeEntries invalid cases", type: :request do
   let(:day) { "2025-08-24" }
 
+  before do
+    User.find_or_create_by!(id: 1) { |u| u.name = "Test"; u.email = "test@example.com" }
+  end
   it "前回の出勤が終了していない場合，二重出勤は拒否されること" do
     TimeEntry.create!(user_id: 1, kind: :clock_in,
                       happened_at: Time.zone.parse("#{day} 09:00"), source: "web")
