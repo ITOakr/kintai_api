@@ -41,5 +41,8 @@ module KintaiApi
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
     config.autoload_paths << Rails.root.join("app/lib")
+
+    config.time_zone = "Asia/Tokyo"
+    config.active_record.default_timezone = :utc
   end
 end
