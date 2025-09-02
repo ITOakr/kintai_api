@@ -23,5 +23,31 @@ module Attendance
         status: attendance_summary.status
       }
     end
+
+    def me
+      authenticate!
+      date = begin
+        Date.parse(params[:date].presence || Date.today.to_s)
+      rescue ArgumentError
+        Date.current
+      end
+
+      r = Attendance::Calculator.summarize_day(user_id: current_user.id, date: date)
+      render json: {
+        date: r.date.to_s,
+        actual: {
+          start: r.start_at&.iso8601,
+          end: r.end_at&.iso8601
+        },
+        totals: {
+          work: r.work_minutes,
+          break: r.break_minutes,
+          overtime: 0,
+          night: 0,
+          holiday: 0
+        },
+        status: r.status
+      }
+    end
   end
 end
