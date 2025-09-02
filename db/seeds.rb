@@ -13,17 +13,21 @@
 
 # これにより、このスクリプトは何度実行しても安全になります。
 
-user = User.find_or_create_by!(id: 1) do |u|
-u.name = "Demo"
-u.email = "demo@example.com"
-u.password = "pass1234" # 新規作成時にパスワードを設定
+user = User.find_by(id: 1)
+
+unless user
+  user = User.new(id: 1)
+  user.save(validate: false) # バリデーションをスキップして保存
 end
 
 # 既にユーザーが存在した場合、パスワードが未設定なら設定する
 
-if user.password_digest.blank?
-user.password = "pass1234"
-user.save!
-end
+user.assign_attributes(
+  name: "Demo",
+  email: "demo@example.com",
+  password: "pass1234"
+)
+
+user.save(validate: false) # バリデーションをスキップして保存
 
 puts "Seed data for User ID:1 has been successfully created or updated."
