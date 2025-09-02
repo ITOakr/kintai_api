@@ -14,3 +14,19 @@
 #       methods: [:get, :post, :put, :patch, :delete, :options, :head]
 #   end
 # end
+origins = [
+  "http://localhost:5173",          # Vite dev
+  "https://kintai-employee-web.vercel.app", # 後で実際のVercel URLに置換
+  "https://kintai-admin-web.vercel.app"     # すでに作るつもりなら先行でOK
+]
+
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins origins
+    resource "*",
+      headers: :any,
+      methods: [ :get, :post, :patch, :put, :delete, :options ],
+      expose: [ "Authorization" ],
+      max_age: 600
+  end
+end
