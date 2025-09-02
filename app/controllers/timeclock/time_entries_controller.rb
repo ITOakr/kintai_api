@@ -1,7 +1,13 @@
 module Timeclock
   class TimeEntriesController < ApplicationController
+    before_action :set_current_user_if_token_present, only: [ :create ]
+
     def create
-      entry = TimeEntry.new(time_entry_params)
+      attrs = time_entry_params.to_h
+      attrs[:user_id] ||= current_user&.id
+
+      entry = TimeEntry.new(attrs)
+
       if entry.save
         render json: entry, status: :created
       else
