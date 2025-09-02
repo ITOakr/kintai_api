@@ -3,6 +3,9 @@
 require "rails_helper"
 
 RSpec.describe "Timeclock::TimeEntries", type: :request do
+  before do
+    User.find_or_create_by!(id: 1) { |u| u.name = "Test"; u.email = "test@example.com" }
+  end
   describe "POST /v1/timeclock/time_entries" do
     # 正常系のテスト
     context "パラメータが正常な場合" do
