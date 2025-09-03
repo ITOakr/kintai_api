@@ -1,10 +1,15 @@
 # 指定されたユーザーの，ある1日の勤怠情報を表示
 module Attendance
   class DailyController < ApplicationController
+    before_action :authenticate!, only: [ :show, :me ]
+
+    # GET /attendance/daily?user_id=1&date=YYYY-MM-DD ← 他人参照はadminのみ
     def show
       user_id = params.require(:user_id)
+      if current_user.employee? && current_user.id.to_s != user_id.to_s
+        return render json: { error: "forbidden" }, status: :forbidden
+      end
       date = Date.parse(params.require(:date))  # "YYYY-MM-DD"文字列をDateオブジェクトに変換
-
       attendance_summary = Attendance::Calculator.summarize_day(user_id: user_id, date: date) # 計算処理を呼び出し
 
       render json: {
@@ -24,8 +29,8 @@ module Attendance
       }
     end
 
+    # GET /attendance/daily/me?date=YYYY-MM-DD ← 自分の勤怠を参照
     def me
-      authenticate!
       date = begin
         Date.parse(params[:date].presence || Date.today.to_s)
       rescue ArgumentError
