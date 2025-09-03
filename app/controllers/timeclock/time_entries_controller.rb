@@ -1,13 +1,11 @@
 module Timeclock
   class TimeEntriesController < ApplicationController
-    before_action :set_current_user_if_token_present, only: [ :create ]
+    before_action :authenticate!, only: [ :index, :create ]
 
     def create
       attrs = time_entry_params.to_h
       attrs[:user_id] ||= current_user&.id
-
       entry = TimeEntry.new(attrs)
-
       if entry.save
         render json: entry, status: :created
       else
@@ -17,9 +15,12 @@ module Timeclock
 
     def index
       user_id = params.require(:user_id)
+      # もしログインしているユーザーが従業員でログインしているユーザーIDと取得しようとしているユーザーIDが違うなら403
+      if current_user.employee? && current_user.id.to_s != user_id.to_s
+        return render json: { error: "forbidden" }, status: :forbidden
+      end
       date = Date.parse(params.require(:date))
       range = date.beginning_of_day..date.end_of_day
-
       entries = TimeEntry.where(user_id: user_id, happened_at: range).order(:happened_at)
       render json: entries
     end
