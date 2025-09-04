@@ -13,6 +13,6 @@ class AuthController < ApplicationController
   # GET /auth/me
   def me
     authenticate!
-    render json: { id: current_user.id, email: current_user.email, name: current_user.name }
+    render json: { id: current_user.id, email: current_user.email, name: current_user.name, role: current_user.role }
   end
 end
