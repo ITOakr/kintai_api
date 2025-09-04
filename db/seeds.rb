@@ -29,7 +29,7 @@ admin.assign_attributes(
   role: :admin
 )
 
-admin.save(validate: false) # バリデーションをスキップして保存
+admin.save!
 
 puts "管理者ユーザーを作成または更新しました: #{admin.email} / パスワード: adminpass"
 
@@ -42,6 +42,6 @@ employee.assign_attributes(
   role: :employee
 )
 
-employee.save(validate: false) # バリデーションをスキップして保存
+employee.save!
 
 puts "従業員ユーザーを作成または更新しました: #{employee.email} / パスワード: employeepass"
