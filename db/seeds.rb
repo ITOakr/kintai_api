@@ -45,6 +45,3 @@ employee.assign_attributes(
 employee.save(validate: false) # バリデーションをスキップして保存
 
 puts "従業員ユーザーを作成または更新しました: #{employee.email} / パスワード: employeepass"
-
-
-
