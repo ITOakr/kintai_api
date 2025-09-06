@@ -19,5 +19,8 @@ Rails.application.routes.draw do
       get "user/daily_quote", to: "daily_quotes#user"
       get "daily_total", to: "daily_totals#show"
     end
+
+    get "sales", to: "sales#show"
+    put "sales", to: "sales#upsert"
   end
 end
