@@ -22,7 +22,7 @@ module Attendance
           work: attendance_summary.work_minutes,
           break: attendance_summary.break_minutes,
           overtime: 0,
-          night: 0,
+          night: attendance_summary.night_minutes,
           holiday: 0
         },
         status: attendance_summary.status
@@ -37,21 +37,21 @@ module Attendance
         Date.current
       end
 
-      r = Attendance::Calculator.summarize_day(user_id: current_user.id, date: date)
+      attendance_summary = Attendance::Calculator.summarize_day(user_id: current_user.id, date: date)
       render json: {
-        date: r.date.to_s,
+        date: attendance_summary.date.to_s,
         actual: {
-          start: r.start_at&.iso8601,
-          end: r.end_at&.iso8601
+          start: attendance_summary.start_at&.iso8601,
+          end: attendance_summary.end_at&.iso8601
         },
         totals: {
-          work: r.work_minutes,
-          break: r.break_minutes,
+          work: attendance_summary.work_minutes,
+          break: attendance_summary.break_minutes,
           overtime: 0,
-          night: 0,
+          night: attendance_summary.night_minutes,
           holiday: 0
         },
-        status: r.status
+        status: attendance_summary.status
       }
     end
   end
