@@ -13,5 +13,10 @@ Rails.application.routes.draw do
       get "my/daily", to: "daily#show"
       get "me/daily", to: "daily#me"
     end
+
+    namespace :payroll do
+      get "me/daily_quote", to: "daily_quotes#me"
+      get "user/daily_quote", to: "daily_quotes#user"
+    end
   end
 end
