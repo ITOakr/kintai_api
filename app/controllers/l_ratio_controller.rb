@@ -8,7 +8,7 @@ class LRatioController < ApplicationController
     sales = Sale.find_by(date: date)&.amount_yen
     total_wage = compute_total_wage(date)
 
-    lratio_val = if sales.nil? || sales.to_i <= 0
+    l_ratio_val = if sales.nil? || sales.to_i <= 0
       nil
     else
       (total_wage.to_f / sales.to_f).round(4)
@@ -18,7 +18,7 @@ class LRatioController < ApplicationController
       date: date.to_s,
       daily_sales: sales,
       total_daily_wage: total_wage,
-      lratio: lratio_val
+      l_ratio: l_ratio_val
     }
   end
 

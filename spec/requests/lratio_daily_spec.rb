@@ -41,13 +41,13 @@ RSpec.describe "Ratio::Daily", type: :request do
     body = JSON.parse(response.body)
     expect(body["total_daily_wage"]).to eq(2000)
     expect(body["daily_sales"]).to eq(10000)
-    expect(body["lratio"]).to eq(0.2)
+    expect(body["l_ratio"]).to eq(0.2)
   end
 
   it "ratio is null when sales missing" do
     t = token_for(email: "admin@example.com", password: "adminpass")
     get "/v1/l_ratio/daily", params: { date: date.to_s }, headers: { "Authorization" => "Bearer #{t}" }
     body = JSON.parse(response.body)
-    expect(body["lratio"]).to be_nil
+    expect(body["l_ratio"]).to be_nil
   end
 end
