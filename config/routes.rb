@@ -22,5 +22,7 @@ Rails.application.routes.draw do
 
     get "sales", to: "sales#show"
     put "sales", to: "sales#upsert"
+
+    get "l_ratio/daily", to: "l_ratio#daily"
   end
 end
