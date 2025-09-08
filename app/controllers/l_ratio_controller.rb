@@ -2,6 +2,7 @@ class LRatioController < ApplicationController
   before_action :authenticate!
   before_action :require_admin!
 
+  # GET /v1/l_ratio/daily
   def daily
     date = parse_date!(params[:date])
     return if performed?
@@ -19,6 +20,56 @@ class LRatioController < ApplicationController
       daily_sales: sales,
       total_daily_wage: total_wage,
       l_ratio: l_ratio_val
+    }
+  end
+
+  def monthly
+    year = (params[:year].presence || Date.today.year).to_i
+    month = (params[:month].presence || Date.today.month).to_i
+    begin
+      first = Date.new(year, month, 1)
+    rescue ArgumentError
+      render json: { error: "invalid_year_or_month" }, status: :bad_request
+    end
+    last = first.end_of_month
+
+    days = []
+    month_sales_sum = 0
+    month_wage_sum = 0
+
+    (first..last).each do |date|
+      sales = Sale.find_by(date: date)&.amount_yen
+      wage = compute_total_wage(date)
+      month_sales_sum += sales.to_i if sales
+      month_wage_sum += wage.to_i
+
+      l_ratio_val = if sales.nil? || sales.to_i <= 0
+        nil
+      else
+        (wage.to_f / sales.to_f).round(4)
+      end
+
+      days << {
+        date: date.to_s,
+        daily_sales: sales,
+        total_daily_wage: wage,
+        l_ratio: l_ratio_val
+      }
+    end
+
+    month_l_ratio = if month_sales_sum <= 0
+      nil
+    else
+      (month_wage_sum.to_f / month_sales_sum.to_f).round(4)
+    end
+
+    render json: {
+      year: year,
+      month: month,
+      days: days,
+      monthly_sales: month_sales_sum,
+      monthly_wage: month_wage_sum,
+      monthly_l_ratio: month_l_ratio
     }
   end
 
