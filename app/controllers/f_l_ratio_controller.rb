@@ -31,6 +31,7 @@ class FLRatioController < ApplicationController
       first = Date.new(year, month, 1)
     rescue ArgumentError
       render json: { error: "invalid_year_or_month" }, status: :bad_request
+      return
     end
     last = first.end_of_month
 
