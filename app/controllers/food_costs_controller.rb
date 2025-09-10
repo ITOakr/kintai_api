@@ -14,6 +14,7 @@ class FoodCostsController < ApplicationController
   # body: amount_yen, note(optional)
   def upsert
     date = parse_date!(params[:date])
+    return if performed?
     amount = params[:amount_yen].to_i
     note = params[:note].presence
 

@@ -28,5 +28,11 @@ Rails.application.routes.draw do
 
     get "l_ratio/daily", to: "l_ratio#daily"
     get "l_ratio/monthly", to: "l_ratio#monthly"
+
+    get "f_ratio/daily", to: "f_ratio#daily"
+    get "f_ratio/monthly", to: "f_ratio#monthly"
+
+    get "f_l_ratio/daily", to: "f_l_ratio#daily"
+    get "f_l_ratio/monthly", to: "f_l_ratio#monthly"
   end
 end
