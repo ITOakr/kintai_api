@@ -23,6 +23,9 @@ Rails.application.routes.draw do
     get "sales", to: "sales#show"
     put "sales", to: "sales#upsert"
 
+    get "food_costs", to: "food_costs#show"
+    put "food_costs", to: "food_costs#upsert"
+
     get "l_ratio/daily", to: "l_ratio#daily"
     get "l_ratio/monthly", to: "l_ratio#monthly"
   end
