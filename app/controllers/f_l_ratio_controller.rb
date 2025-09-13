@@ -10,7 +10,7 @@ class FLRatioController < ApplicationController
     food_cost = FoodCost.find_by(date: date)&.amount_yen
     total_wage = compute_total_wage(date)
 
-    f_l_ratio_val = if sale.nil? || sale.to_i <= 0 || food_cost.nil? || food_cost.to_i <= 0
+    f_l_ratio_val = if sale.nil? || sale.to_i <= 0
       nil
     else
       ((total_wage.to_f + food_cost.to_f) / sale.to_f).round(4)
@@ -19,6 +19,7 @@ class FLRatioController < ApplicationController
     render json: {
       date: date.to_s,
       daily_sale: sale,
+      daily_food_cost: food_cost,
       total_daily_wage: total_wage,
       f_l_ratio: f_l_ratio_val
     }
@@ -48,7 +49,7 @@ class FLRatioController < ApplicationController
       month_food_cost_sum += food_cost.to_i if food_cost
       month_wage_sum += wage.to_i
 
-      f_l_ratio_val = if sale.nil? || sale.to_i <= 0 || food_cost.nil? || food_cost.to_i <= 0
+      f_l_ratio_val = if sale.nil? || sale.to_i <= 0
         nil
       else
         ((wage.to_f + food_cost.to_f) / sale.to_f).round(4)
