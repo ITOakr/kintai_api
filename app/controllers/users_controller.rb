@@ -1,0 +1,40 @@
+class UsersController < ApplicationController
+  before_action :authenticate!, only: [ :pending, :approve ]
+  before_action :require_admin!, only: [ :pending, :approve ]
+  before_action :set_user, only: [ :approve ]
+
+  # POST /users/signup
+  def signup
+    user = User.new(user_params)
+    if user.save
+      render json: { message: "ユーザー登録の申請を受け付けました。管理者の承認をお待ちください。" }, status: :created
+    else
+      render json: { error: user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  # GET /users/pending
+  def pending
+    @pending_users = User.where(is_active: false)
+    render json: @pending_users, status: :ok
+  end
+
+  # PATCH /users/:id/approve
+  def approve
+    if @user.update(is_active: true, role: params[:role], base_hourly_wage: params[:base_hourly_wage])
+      render json: { message: "#{@user.name}さんを承認しました。" }, status: :ok
+    else
+      render json: { error: user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  private
+
+  def user_params
+    params.require(:user).permit(:name, :email, :password)
+  end
+
+  def set_user
+    @user = User.find(params[:id])
+  end
+end

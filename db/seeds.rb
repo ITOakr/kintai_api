@@ -8,7 +8,8 @@ admin.assign_attributes(
   name: "管理者ユーザー",
   password: "adminpass",
   role: :admin,
-  base_hourly_wage: 1500 # 管理者の時給
+  base_hourly_wage: 1500, # 管理者の時給
+  is_active: true
 )
 admin.save!
 puts "Admin user: #{admin.email}"
