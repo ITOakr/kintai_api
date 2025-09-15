@@ -4,6 +4,10 @@ Rails.application.routes.draw do
   post "/auth/login", to: "auth#login"
   get "/auth/me", to: "auth#me"
 
+  post "/users/signup", to: "users#signup"
+  get "/users/pending", to: "users#pending"
+  patch "/users/:id/approve", to: "users#approve"
+
   scope :v1 do
     namespace :timeclock do
       resources :time_entries, only: [ :index, :create ]
