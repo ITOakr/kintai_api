@@ -52,8 +52,9 @@ class UsersController < ApplicationController
   private
 
   def user_update_params
-    params.require(:user).permit(:role, :base_hourly_wage)
+    params.require(:user).permit(:role, :base_hourly_wage).merge(is_active: true)
   end
+
   def user_params
     params.require(:user).permit(:name, :email, :password)
   end
