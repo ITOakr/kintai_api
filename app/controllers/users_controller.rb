@@ -1,7 +1,13 @@
 class UsersController < ApplicationController
-  before_action :authenticate!, only: [ :pending, :approve ]
-  before_action :require_admin!, only: [ :pending, :approve ]
-  before_action :set_user, only: [ :approve ]
+  before_action :authenticate!, only: [ :pending, :approve, :index, :update, :destroy ]
+  before_action :require_admin!, only: [ :pending, :approve, :index, :update, :destroy ]
+  before_action :set_user, only: [ :approve, :update, :destroy ]
+
+  # GET /users
+  def index
+    @users = User.where(is_active: true).order(:id)
+    render json: @users.as_json(only: [ :id, :name, :email, :role, :base_hourly_wage ]), status: :ok
+  end
 
   # POST /users/signup
   def signup
@@ -28,7 +34,26 @@ class UsersController < ApplicationController
     end
   end
 
+  # PATCH /users/:id
+  def update
+    if @user.update(user_update_params)
+      render json: { message: "#{@user.name}さんの情報を更新しました。" }, status: :ok
+    else
+      render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
+  # DELETE /users/:id
+  def destroy
+    @user.destroy
+    render json: { message: "#{@user.name}さんを削除しました。" }, status: :ok
+  end
+
   private
+
+  def user_update_params
+    params.require(:user).permit(:role, :base_hourly_wage).merge(is_active: true)
+  end
 
   def user_params
     params.require(:user).permit(:name, :email, :password)
