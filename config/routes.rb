@@ -4,6 +4,8 @@ Rails.application.routes.draw do
   post "/auth/login", to: "auth#login"
   get "/auth/me", to: "auth#me"
 
+  resources :users, only: [ :index, :update, :destroy ]
+
   post "/users/signup", to: "users#signup"
   get "/users/pending", to: "users#pending"
   patch "/users/:id/approve", to: "users#approve"
