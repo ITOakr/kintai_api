@@ -5,13 +5,14 @@ class UsersController < ApplicationController
 
   # GET /users
   def index
-    @users = User.where(is_active: true).order(:id)
+    @users = User.status_active.order(:id)
     render json: @users.as_json(only: [ :id, :name, :email, :role, :base_hourly_wage ]), status: :ok
   end
 
   # POST /users/signup
   def signup
     user = User.new(user_params)
+    user.status = :pending
     if user.save
       render json: { message: "ユーザー登録の申請を受け付けました。管理者の承認をお待ちください。" }, status: :created
     else
@@ -21,16 +22,16 @@ class UsersController < ApplicationController
 
   # GET /users/pending
   def pending
-    @pending_users = User.where(is_active: false)
+    @pending_users = User.status_pending
     render json: @pending_users, status: :ok
   end
 
   # PATCH /users/:id/approve
   def approve
-    if @user.update(is_active: true, role: params[:role], base_hourly_wage: params[:base_hourly_wage])
+    if @user.update(approve_params)
       render json: { message: "#{@user.name}さんを承認しました。" }, status: :ok
     else
-      render json: { error: user.errors.full_messages }, status: :unprocessable_entity
+      render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
     end
   end
 
@@ -45,14 +46,22 @@ class UsersController < ApplicationController
 
   # DELETE /users/:id
   def destroy
-    @user.destroy
-    render json: { message: "#{@user.name}さんを削除しました。" }, status: :ok
+    begin
+      @user.update!(status: :deleted)
+      render json: { message: "#{@user.name}さんを削除しました。" }, status: :ok
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    end
   end
 
   private
 
+  def approve_params
+    params.permit(:role, :base_hourly_wage).merge(status: :active)
+  end
+
   def user_update_params
-    params.require(:user).permit(:role, :base_hourly_wage).merge(is_active: true)
+    params.permit(:role, :base_hourly_wage)
   end
 
   def user_params

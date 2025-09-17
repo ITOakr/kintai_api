@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_15_023136) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_17_052325) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,7 +55,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_15_023136) do
     t.string "password_digest"
     t.integer "role", default: 0, null: false
     t.integer "base_hourly_wage", default: 0, null: false
-    t.boolean "is_active", default: false, null: false
+    t.integer "status", default: 0, null: false
     t.index ["email"], name: "index_users_on_email"
     t.index ["role"], name: "index_users_on_role"
     t.check_constraint "base_hourly_wage >= 0", name: "base_hourly_wage_non_negative"
