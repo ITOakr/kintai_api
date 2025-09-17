@@ -5,7 +5,7 @@ class User < ApplicationRecord
   has_secure_password
   enum :role, { employee: 0, admin: 1 }
 
-  enum :status, { pending: 0, active: 1, deleted: 2 }, _prefix: true
+  enum :status, { pending: 0, active: 1, deleted: 2 }, prefix: true
 
   validates :base_hourly_wage, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 end
