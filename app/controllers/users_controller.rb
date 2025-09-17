@@ -46,12 +46,12 @@ class UsersController < ApplicationController
 
   # DELETE /users/:id
   def destroy
-    if @user.status_deleted!
+    begin
+      @user.update!(status: :deleted)
       render json: { message: "#{@user.name}さんを削除しました。" }, status: :ok
-    else
+    rescue ActiveRecord::RecordInvalid
       render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
     end
-  end
 
   private
 
