@@ -28,7 +28,7 @@ class UsersController < ApplicationController
 
   # PATCH /users/:id/approve
   def approve
-    if @user.update(role: params[:role], base_hourly_wage: params[:base_hourly_wage], status: :active)
+    if @user.update(approve_params)
       render json: { message: "#{@user.name}さんを承認しました。" }, status: :ok
     else
       render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
@@ -54,6 +54,10 @@ class UsersController < ApplicationController
   end
 
   private
+
+  def approve_params
+    params.permit(:role, :base_hourly_wage).merge(status: :active)
+  end
 
   def user_update_params
     params.require(:user).permit(:role, :base_hourly_wage)
