@@ -60,7 +60,7 @@ class UsersController < ApplicationController
   end
 
   def user_update_params
-    params.require(:user).permit(:role, :base_hourly_wage)
+    params.permit(:role, :base_hourly_wage)
   end
 
   def user_params
