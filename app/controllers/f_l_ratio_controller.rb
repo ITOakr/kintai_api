@@ -7,7 +7,7 @@ class FLRatioController < ApplicationController
     date = parse_date!(params[:date])
     return if performed?
     sale = Sale.find_by(date: date)&.amount_yen
-    food_cost = FoodCost.find_by(date: date)&.amount_yen
+    food_cost = FoodCost.where(date: date).sum(:amount_yen)
     total_wage = compute_total_wage(date)
 
     f_l_ratio_val = if sale.nil? || sale.to_i <= 0
@@ -41,9 +41,12 @@ class FLRatioController < ApplicationController
     month_food_cost_sum = 0
     month_wage_sum = 0
 
+    sales_by_date = Sale.where(date: first..last).index_by(&:date)
+    food_cost_by_date = FoodCost.where(date: first..last).group(:date).sum(:amount_yen)
+
     (first..last).each do |date|
-      sale = Sale.find_by(date: date)&.amount_yen
-      food_cost = FoodCost.find_by(date: date)&.amount_yen
+      sale = sales_by_date[date]&.amount_yen
+      food_cost = food_cost_by_date[date]
       wage = compute_total_wage(date)
       month_sale_sum += sale.to_i if sale
       month_food_cost_sum += food_cost.to_i if food_cost
@@ -64,7 +67,7 @@ class FLRatioController < ApplicationController
       }
     end
 
-    month_f_l_ratio = if month_sale_sum.to_i <= 0 || month_food_cost_sum.to_i <= 0
+    month_f_l_ratio = if month_sale_sum.to_i <= 0
       nil
     else
       ((month_wage_sum.to_f + month_food_cost_sum.to_f) / month_sale_sum.to_f).round(4)

@@ -6,8 +6,8 @@ class FoodCostsController < ApplicationController
   def show
     date = parse_date!(params[:date])
     return if performed?
-    food_cost = FoodCost.find_by(date: date)
-    render json: food_cost ? serialize(food_cost) : { date: date.to_s, amount_yen: nil, note: nil }
+    food_cost = FoodCost.where(date: date)
+    render json: food_cost.map { |fc| serialize(fc) }
   end
 
   # PUT /v1/food_costs?date=YYYY-MM-DD
@@ -15,17 +15,28 @@ class FoodCostsController < ApplicationController
   def upsert
     date = parse_date!(params[:date])
     return if performed?
-    amount = params[:amount_yen].to_i
-    note = params[:note].presence
 
-    food_cost = FoodCost.find_or_initialize_by(date: date)
-    food_cost.amount_yen = amount
-    food_cost.note = note
-    if food_cost.save
-      render json: serialize(food_cost)
-    else
-      render json: { errors: food_cost.errors.full_messages }, status: :unprocessable_entity
+    # フロントエンドから送られてくる食材費リスト
+    food_cost_items = params.require(:food_costs)
+
+    # 一つでも保存に失敗したら全ての変更を元に戻す（トランザクション）
+    FoodCost.transaction do
+      # その日の食材費を一旦全削除
+      FoodCost.where(date: date).delete_all
+
+      # 新しいデータを１つずつ保存
+      food_cost_items.each do |item|
+        safe_params = item.permit(:category, :amount_yen, :note)
+        FoodCost.create!(date: date, **safe_params)
+      end
     end
+
+    # 最新のデータを取得して返す
+    new_food_costs = FoodCost.where(date: date)
+    render json: new_food_costs.map { |fc| serialize(fc) }
+
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   private
@@ -36,12 +47,13 @@ class FoodCostsController < ApplicationController
     render json: { error: "invalid_date_format" }, status: :bad_request
   end
 
-  def serialize(sale)
+  def serialize(fc)
     {
-      id: sale.id,
-      date: sale.date.to_s,
-      amount_yen: sale.amount_yen,
-      note: sale.note
+      id: fc.id,
+      date: fc.date.to_s,
+      category: fc.category,
+      amount_yen: fc.amount_yen,
+      note: fc.note
     }
   end
 end
