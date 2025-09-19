@@ -22,7 +22,7 @@ class FoodCostsController < ApplicationController
     # 一つでも保存に失敗したら全ての変更を元に戻す（トランザクション）
     FoodCost.transaction do
       # その日の食材費を一旦全削除
-      FoodCost.where(date: date).delete_all
+      FoodCost.where(date: date).destroy_all
 
       # 新しいデータを１つずつ保存
       food_cost_items.each do |item|
