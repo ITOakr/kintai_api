@@ -17,7 +17,7 @@ class FoodCostsController < ApplicationController
     return if performed?
 
     # フロントエンドから送られてくる食材費リスト
-    food_cost_items = params.require(:food_costs)
+    food_cost_items = food_cost_params
 
     # 一つでも保存に失敗したら全ての変更を元に戻す（トランザクション）
     FoodCost.transaction do
@@ -26,8 +26,7 @@ class FoodCostsController < ApplicationController
 
       # 新しいデータを１つずつ保存
       food_cost_items.each do |item|
-        safe_params = item.permit(:category, :amount_yen, :note)
-        FoodCost.create!(date: date, **safe_params)
+        FoodCost.create!(date: date, **item)
       end
     end
 
@@ -55,5 +54,11 @@ class FoodCostsController < ApplicationController
       amount_yen: fc.amount_yen,
       note: fc.note
     }
+  end
+
+  def food_cost_params
+    params.require(:food_costs).map do |item|
+      ActionController::Parameters.new(item).permit(:category, :amount_yen, :note)
+    end
   end
 end
