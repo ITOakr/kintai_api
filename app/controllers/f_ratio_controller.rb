@@ -7,7 +7,7 @@ class FRatioController < ApplicationController
     date = parse_date!(params[:date])
     return if performed?
     sales = Sale.find_by(date: date)&.amount_yen
-    food_cost = FoodCost.find_by(date: date)&.amount_yen
+    food_cost = FoodCost.where(date: date).sum(:amount_yen)
 
     f_ratio_val = calculate_f_ratio(food_cost, sales)
 
@@ -30,15 +30,15 @@ class FRatioController < ApplicationController
     last = first.end_of_month
 
     days = []
-    month_sales_sum = 0
-    month_food_cost_sum = 0
+    month_sales_sum = Sale.where(date: first..last).sum(:amount_yen)
+    month_food_cost_sum = FoodCost.where(date: first..last).sum(:amount_yen)
+
+    sales_by_date = Sale.where(date: first..last).index_by(&:date)
+    food_cost_by_date = FoodCost.where(date: first..last).group(:date).sum(:amount_yen)
 
     (first..last).each do |date|
-      sales = Sale.find_by(date: date)&.amount_yen
-      food_cost = FoodCost.find_by(date: date)&.amount_yen
-      month_sales_sum += sales.to_i if sales
-      month_food_cost_sum += food_cost.to_i if food_cost
-
+      sales = sales_by_date[date]&.amount_yen
+      food_cost = food_cost_by_date[date]
       f_ratio_val = calculate_f_ratio(food_cost, sales)
 
       days << {
@@ -68,7 +68,7 @@ class FRatioController < ApplicationController
   private
 
   def calculate_f_ratio(food_cost, sales)
-    return nil if sales.nil? || sales.to_i <= 0
+    return nil if sales.nil? || sales.to_i <= 0 || food_cost.nil?
     (food_cost.to_f / sales.to_f).round(4)
   end
 

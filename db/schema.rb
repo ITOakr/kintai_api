@@ -10,18 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_17_052325) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_18_103728) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "food_costs", force: :cascade do |t|
     t.date "date", null: false
+    t.integer "category", null: false
     t.integer "amount_yen", default: 0, null: false
     t.string "note"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["date"], name: "index_food_costs_on_date", unique: true
-    t.check_constraint "amount_yen >= 0", name: "chk_food_cost_amount_nonneg"
+    t.index ["date"], name: "index_food_costs_on_date"
   end
 
   create_table "sales", force: :cascade do |t|
