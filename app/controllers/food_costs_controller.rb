@@ -26,7 +26,7 @@ class FoodCostsController < ApplicationController
 
       # 新しいデータを１つずつ保存
       food_cost_items.each do |item|
-        FoodCost.create!(date: date, **item)
+        FoodCost.create!(date: date, **item.to_h)
       end
     end
 
@@ -58,7 +58,7 @@ class FoodCostsController < ApplicationController
 
   def food_cost_params
     params.require(:food_costs).map do |item|
-      ActionController::Parameters.new(item).permit(:category, :amount_yen, :note)
+      item.permit(:category, :amount_yen, :note)
     end
   end
 end
