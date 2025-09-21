@@ -1,0 +1,7 @@
+ja:
+  activerecord:
+    attributes:
+      user:
+        roles:
+          employee: "従業員"
+          admin: "管理者"

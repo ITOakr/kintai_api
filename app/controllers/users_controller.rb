@@ -29,6 +29,11 @@ class UsersController < ApplicationController
   # PATCH /users/:id/approve
   def approve
     if @user.update(approve_params)
+      create_admin_log(
+        action: "ユーザー承認",
+        target_user: @user,
+        details: "#{@user.name}さんを承認しました。"
+      )
       render json: { message: "#{@user.name}さんを承認しました。" }, status: :ok
     else
       render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
@@ -37,7 +42,22 @@ class UsersController < ApplicationController
 
   # PATCH /users/:id
   def update
+    user_before_update = @user.dup
     if @user.update(user_update_params)
+      details = []
+      if user_before_update.role != @user.role
+        details << "権限を「#{user_before_update.role_i18n}」から「#{@user.role_i18n}」に変更しました。"
+      end
+      if user_before_update.base_hourly_wage != @user.base_hourly_wage
+        details << "時給を「#{user_before_update.base_hourly_wage}円」から「#{@user.base_hourly_wage}円」に変更しました。"
+      end
+      if details.any?
+        create_admin_log(
+          action: "ユーザー情報更新",
+          target_user: @user,
+          details: "#{@user.name}さんの情報を更新しました。\n " + details.join("\n")
+        )
+      end
       render json: { message: "#{@user.name}さんの情報を更新しました。" }, status: :ok
     else
       render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
@@ -48,6 +68,11 @@ class UsersController < ApplicationController
   def destroy
     begin
       @user.update!(status: :deleted)
+      create_admin_log(
+        action: "ユーザー削除",
+        target_user: @user,
+        details: "#{@user.name}さんを削除しました。"
+      )
       render json: { message: "#{@user.name}さんを削除しました。" }, status: :ok
     rescue ActiveRecord::RecordInvalid => e
       render json: { error: e.message }, status: :unprocessable_entity
