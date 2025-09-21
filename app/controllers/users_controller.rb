@@ -55,7 +55,7 @@ class UsersController < ApplicationController
         create_admin_log(
           action: "ユーザー情報更新",
           target_user: @user,
-          details: "#{@user.name}さんの情報を更新しました。\n " + details.join(" \n")
+          details: "#{@user.name}さんの情報を更新しました。\n " + details.join("\n")
         )
       end
       render json: { message: "#{@user.name}さんの情報を更新しました。" }, status: :ok
