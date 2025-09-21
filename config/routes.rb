@@ -1,5 +1,4 @@
 Rails.application.routes.draw do
-  get "daily_summary/show"
   get :health, to: "health_checks#index"
 
   post "/auth/login", to: "auth#login"
