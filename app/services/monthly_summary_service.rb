@@ -12,10 +12,12 @@ class MonthlySummaryService
     food_costs_by_date = FoodCost.where(date: @start_date..@end_date).group(:date).sum(:amount_yen)
 
     # 1日から最終日まで，1日ずつループ処理
-    days_data = (@start_date..@end_date).map do |date|
-      # 日次サマリのサービスを再利用して，その日の人件費などを計算
-      daily_summary = DailySummaryService.new(date).perform
+    dates = (@start_date..@end_date).to_a
+    # 日次サマリをバッチで取得
+    daily_summaries = DailySummaryService.respond_to?(:batch_perform) ? DailySummaryService.batch_perform(dates) : dates.index_with { |date| DailySummaryService.new(date).perform }
 
+    days_data = dates.map do |date|
+      daily_summary = daily_summaries[date]
       sale_amount = sales_by_date[date]&.amount_yen
       food_cost_amount = food_costs_by_date[date] || 0
 
