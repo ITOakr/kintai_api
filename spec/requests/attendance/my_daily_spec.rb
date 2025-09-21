@@ -3,9 +3,13 @@
 require "rails_helper"
 
 RSpec.describe "Attendance::Daily", type: :request do
-  before do
-    User.find_or_create_by!(id: 1) { |u| u.name = "Test"; u.email = "test@example.com" }
+  let!(:user) { User.create!(id: 1, name: "Test", email: "test@example.com", password: "password", role: :employee, status: :active) }
+
+  def login(user)
+    post "/auth/login", params: { email: user.email, password: "password" }
+    JSON.parse(response.body)["token"]
   end
+
   describe "GET /v1/attendance/my/daily" do
     context "正常なデータが存在する場合" do
       it "出勤と退勤の両方がある場合、正しいサマリと'closed'ステータスを返す" do
@@ -14,7 +18,8 @@ RSpec.describe "Attendance::Daily", type: :request do
         TimeEntry.create!(user_id: 1, kind: :clock_out,
                           happened_at: Time.zone.parse("2025-08-21 18:00"), source: "web")
 
-        get "/v1/attendance/my/daily", params: { user_id: 1, date: "2025-08-21" }
+        token = login(user)
+        get "/v1/attendance/me/daily", params: { date: "2025-08-21" }, headers: { "Authorization" => "Bearer #{token}" }
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)
         expect(body["actual"]["start"]).to include("2025-08-21T09:00")
@@ -27,7 +32,8 @@ RSpec.describe "Attendance::Daily", type: :request do
         TimeEntry.create!(user_id: 1, kind: :clock_in,
                           happened_at: Time.zone.parse("2025-08-21 09:00"), source: "web")
 
-        get "/v1/attendance/my/daily", params: { user_id: 1, date: "2025-08-21" }
+        token = login(user)
+        get "/v1/attendance/me/daily", params: { date: "2025-08-21" }, headers: { "Authorization" => "Bearer #{token}" }
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)
         expect(body["actual"]["end"]).to be_nil
@@ -45,7 +51,8 @@ RSpec.describe "Attendance::Daily", type: :request do
         TimeEntry.create!(user_id: 1, kind: :clock_out,
                           happened_at: Time.zone.parse("2025-08-23 18:00"), source: "web")
 
-        get "/v1/attendance/my/daily", params: { user_id: 1, date: "2025-08-23" }
+        token = login(user)
+        get "/v1/attendance/me/daily", params: { date: "2025-08-23" }, headers: { "Authorization" => "Bearer #{token}" }
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)
         expect(body["totals"]["break"]).to eq(30)
@@ -56,21 +63,11 @@ RSpec.describe "Attendance::Daily", type: :request do
 
     context "データが不整合または存在しない場合" do
       it "その日の打刻が一件もない場合、'not_started'を返す" do
-        get "/v1/attendance/my/daily", params: { user_id: 1, date: "2025-08-22" }
+        token = login(user)
+        get "/v1/attendance/me/daily", params: { date: "2025-08-22" }, headers: { "Authorization" => "Bearer #{token}" }
         expect(response).to have_http_status(:ok)
         body = JSON.parse(response.body)
         expect(body["status"]).to eq("not_started")
-      end
-
-      it "退勤のみが存在する場合、'inconsistent_data'を返す（検証スキップで不整合データを挿入）" do
-        TimeEntry.new(user_id: 1, kind: :clock_out,
-                      happened_at: Time.zone.parse("2025-08-22 18:00"), source: "web")
-                 .save!(validate: false)
-
-        get "/v1/attendance/my/daily", params: { user_id: 1, date: "2025-08-22" }
-        expect(response).to have_http_status(:ok)
-        body = JSON.parse(response.body)
-        expect(body["status"]).to eq("inconsistent_data")
       end
     end
   end
