@@ -10,9 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_18_103728) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_20_085846) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "admin_logs", force: :cascade do |t|
+    t.bigint "admin_user_id", null: false
+    t.bigint "target_user_id"
+    t.string "action"
+    t.text "details"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["admin_user_id"], name: "index_admin_logs_on_admin_user_id"
+    t.index ["target_user_id"], name: "index_admin_logs_on_target_user_id"
+  end
 
   create_table "food_costs", force: :cascade do |t|
     t.date "date", null: false
@@ -61,5 +72,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_18_103728) do
     t.check_constraint "base_hourly_wage >= 0", name: "base_hourly_wage_non_negative"
   end
 
+  add_foreign_key "admin_logs", "users", column: "admin_user_id"
+  add_foreign_key "admin_logs", "users", column: "target_user_id"
   add_foreign_key "time_entries", "users"
 end

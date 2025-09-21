@@ -20,4 +20,14 @@ class ApplicationController < ActionController::API
   def require_admin!
     render json: { error: "forbidden" }, status: :forbidden unless current_user.admin?
   end
+
+  # ログを作成する共通メソッド
+  def create_admin_log(action:, target_user: nil, details: "")
+    AdminLog.create!(
+      admin_user: current_user,
+      target_user: target_user,
+      action: action,
+      details: details
+    )
+  end
 end

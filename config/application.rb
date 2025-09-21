@@ -44,5 +44,6 @@ module KintaiApi
 
     config.time_zone = "Asia/Tokyo"
     config.active_record.default_timezone = :utc
+    config.i18n.default_locale = :ja
   end
 end

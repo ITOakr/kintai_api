@@ -40,5 +40,7 @@ Rails.application.routes.draw do
 
     get "f_l_ratio/daily", to: "f_l_ratio#daily"
     get "f_l_ratio/monthly", to: "f_l_ratio#monthly"
+
+    resources :admin_logs, only: [ :index ]
   end
 end
