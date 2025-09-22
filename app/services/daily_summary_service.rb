@@ -50,7 +50,7 @@ class DailySummaryService
                                 .where("effective_from <= ?", @date)
                                 .order(:user_id, effective_from: :desc)
 
-    wages_by_user_id = wage_histories.group_by(&:user_id).transform_values { |histories| histories.first.wage }
+    wages_by_user_id = wage_histories.group_by(&:user_id).transform_values { |histories| histories.first&.wage }
 
     rows = []
     total = 0
