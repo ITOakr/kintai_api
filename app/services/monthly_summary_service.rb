@@ -31,12 +31,15 @@ class MonthlySummaryService
       f_ratio = calculate_ratio(food_cost_amount, sale_amount)
       f_l_ratio = calculate_ratio(total_wage + food_cost_amount, sale_amount)
 
-      cumulative_sales += (sale_amount || 0)
-      cumulative_food_costs += (food_cost_amount || 0)
-      cumulative_wage += (total_wage || 0)
-
-      cumulative_f_l_ratio = calculate_ratio(cumulative_wage + cumulative_food_costs, cumulative_sales)
-
+      # 累積計算は未来日を除外
+      if date > Date.current
+        cumulative_f_l_ratio = nil
+      else
+        cumulative_sales += (sale_amount || 0)
+        cumulative_food_costs += (food_cost_amount || 0)
+        cumulative_wage += (total_wage || 0)
+        cumulative_f_l_ratio = calculate_ratio(cumulative_wage + cumulative_food_costs, cumulative_sales)
+      end
       if date > Date.current
         # 未来の日付のデータは空にする
         {
