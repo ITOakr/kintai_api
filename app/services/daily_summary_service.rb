@@ -46,24 +46,32 @@ class DailySummaryService
     users = User.where(id: user_ids).select(:id, :name, :base_hourly_wage)
     users_by_id = users.index_by(&:id)
 
+    wage_histories = WageHistory.where(user_id: user_ids)
+                                .where("effective_from <= ?", @date)
+                                .order(:user_id, effective_from: :desc)
+
+    wages_by_user_id = wage_histories.group_by(&:user_id).transform_values { |histories| histories.first.wage }
+
     rows = []
     total = 0
     user_ids.each do |uid|
       user = users_by_id[uid]
       next unless user
 
+      wage_for_the_day = wages_by_user_id[uid] || user.base_hourly_wage.to_i
+
       summary = Attendance::Calculator.summarize_day(user_id: uid, date: @date)
       next if summary.work_minutes.to_i <= 0
 
       wage = ::Payroll::Calculator.daily_wage(
-        base: user.base_hourly_wage.to_i,
+        base: wage_for_the_day,
         work_minutes: summary.work_minutes,
         night_minutes: summary.night_minutes
       )
       rows << {
         user_id: uid,
         user_name: user.name,
-        base_hourly_wage: user.base_hourly_wage.to_i,
+        base_hourly_wage: wage_for_the_day,
         work_minutes: summary.work_minutes,
         break_minutes: summary.break_minutes,
         night_minutes: summary.night_minutes,

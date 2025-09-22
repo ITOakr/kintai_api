@@ -29,6 +29,11 @@ class UsersController < ApplicationController
   # PATCH /users/:id/approve
   def approve
     if @user.update(approve_params)
+      WageHistory.create!(
+        user: @user,
+        wage: @user.base_hourly_wage,
+        effective_from: Date.current
+      )
       create_admin_log(
         action: "ユーザー承認",
         target_user: @user,
@@ -50,6 +55,11 @@ class UsersController < ApplicationController
       end
       if user_before_update.base_hourly_wage != @user.base_hourly_wage
         details << "時給を「#{user_before_update.base_hourly_wage}円」から「#{@user.base_hourly_wage}円」に変更しました。"
+        WageHistory.create!(
+          user: @user,
+          wage: @user.base_hourly_wage,
+          effective_from: Date.current
+        )
       end
       if details.any?
         create_admin_log(
