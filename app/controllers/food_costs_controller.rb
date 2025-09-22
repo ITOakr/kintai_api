@@ -79,7 +79,7 @@ class FoodCostsController < ApplicationController
   end
 
   def food_cost_params
-    params.require(:food_costs).map do |item|
+    (params[:food_costs] || []).map do |item|
       item.permit(:category, :amount_yen, :note)
     end
   end

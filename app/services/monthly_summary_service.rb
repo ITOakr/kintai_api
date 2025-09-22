@@ -20,21 +20,35 @@ class MonthlySummaryService
       daily_summary = daily_summaries[date]
       sale_amount = sales_by_date[date]&.amount_yen
       food_cost_amount = food_costs_by_date[date] || 0
+      total_wage = daily_summary[:total_wage]
 
       # 各比率を計算
-      l_ratio = calculate_ratio(daily_summary[:total_wage], sale_amount)
+      l_ratio = calculate_ratio(total_wage, sale_amount)
       f_ratio = calculate_ratio(food_cost_amount, sale_amount)
-      f_l_ratio = calculate_ratio(daily_summary[:total_wage] + food_cost_amount, sale_amount)
+      f_l_ratio = calculate_ratio(total_wage + food_cost_amount, sale_amount)
 
-      {
-        date: date.to_s,
-        daily_sales: sale_amount,
-        total_daily_wage: daily_summary[:total_wage],
-        daily_food_costs: food_cost_amount,
-        l_ratio: l_ratio,
-        f_ratio: f_ratio,
-        f_l_ratio: f_l_ratio
-      }
+      if date > Date.current
+        # 未来の日付のデータは空にする
+        {
+          date: date.to_s,
+          daily_sales: nil,
+          total_daily_wage: nil,
+          daily_food_costs: nil,
+          l_ratio: nil,
+          f_ratio: nil,
+          f_l_ratio: nil
+        }
+      else
+        {
+          date: date.to_s,
+          daily_sales: sale_amount,
+          total_daily_wage: total_wage,
+          daily_food_costs: food_cost_amount,
+          l_ratio: l_ratio,
+          f_ratio: f_ratio,
+          f_l_ratio: f_l_ratio
+        }
+      end
     end
 
     # 日々のデータを元に，月全体の合計値と比率を計算
