@@ -16,6 +16,10 @@ class MonthlySummaryService
     # 日次サマリをバッチで取得
     daily_summaries = DailySummaryService.respond_to?(:batch_perform) ? DailySummaryService.batch_perform(dates) : dates.index_with { |date| DailySummaryService.new(date).perform }
 
+    cumulative_sales = 0
+    cumulative_food_costs = 0
+    cumulative_wage = 0
+
     days_data = dates.map do |date|
       daily_summary = daily_summaries[date]
       sale_amount = sales_by_date[date]&.amount_yen
@@ -27,6 +31,15 @@ class MonthlySummaryService
       f_ratio = calculate_ratio(food_cost_amount, sale_amount)
       f_l_ratio = calculate_ratio(total_wage + food_cost_amount, sale_amount)
 
+      # 累積計算は未来日を除外
+      if date > Date.current
+        cumulative_f_l_ratio = nil
+      else
+        cumulative_sales += (sale_amount || 0)
+        cumulative_food_costs += (food_cost_amount || 0)
+        cumulative_wage += (total_wage || 0)
+        cumulative_f_l_ratio = calculate_ratio(cumulative_wage + cumulative_food_costs, cumulative_sales)
+      end
       if date > Date.current
         # 未来の日付のデータは空にする
         {
@@ -36,7 +49,8 @@ class MonthlySummaryService
           daily_food_costs: nil,
           l_ratio: nil,
           f_ratio: nil,
-          f_l_ratio: nil
+          f_l_ratio: nil,
+          cumulative_f_l_ratio: nil
         }
       else
         {
@@ -46,7 +60,8 @@ class MonthlySummaryService
           daily_food_costs: food_cost_amount,
           l_ratio: l_ratio,
           f_ratio: f_ratio,
-          f_l_ratio: f_l_ratio
+          f_l_ratio: f_l_ratio,
+          cumulative_f_l_ratio: cumulative_f_l_ratio
         }
       end
     end
