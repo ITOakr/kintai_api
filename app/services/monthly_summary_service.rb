@@ -27,7 +27,7 @@ class MonthlySummaryService
       f_ratio = calculate_ratio(food_cost_amount, sale_amount)
       f_l_ratio = calculate_ratio(total_wage + food_cost_amount, sale_amount)
 
-      if date > Date.today
+      if date > Date.current
         # 未来の日付のデータは空にする
         {
           date: date.to_s,
