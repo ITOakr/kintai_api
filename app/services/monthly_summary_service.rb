@@ -31,9 +31,9 @@ class MonthlySummaryService
       f_ratio = calculate_ratio(food_cost_amount, sale_amount)
       f_l_ratio = calculate_ratio(total_wage + food_cost_amount, sale_amount)
 
-      cumulative_sales += sale_amount.to_i
-      cumulative_food_costs += food_cost_amount.to_i
-      cumulative_wage += total_wage.to_i
+      cumulative_sales += (sale_amount || 0)
+      cumulative_food_costs += (food_cost_amount || 0)
+      cumulative_wage += (total_wage || 0)
 
       cumulative_f_l_ratio = calculate_ratio(cumulative_wage + cumulative_food_costs, cumulative_sales)
 
