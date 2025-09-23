@@ -52,6 +52,10 @@ class DailySummaryService
 
     wages_by_user_id = wage_histories.group_by(&:user_id).transform_values { |histories| histories.first&.wage }
 
+    users.each do |user|
+      wages_by_user_id[user.id] ||= user.base_hourly_wage
+    end
+
     rows = []
     total = 0
     user_ids.each do |uid|
