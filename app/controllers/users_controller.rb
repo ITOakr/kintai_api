@@ -55,11 +55,13 @@ class UsersController < ApplicationController
       end
       if user_before_update.base_hourly_wage != @user.base_hourly_wage
         details << "時給を「#{user_before_update.base_hourly_wage}円」から「#{@user.base_hourly_wage}円」に変更しました。"
-        WageHistory.create!(
+        history = WageHistory.find_or_initialize_by(
           user: @user,
-          wage: @user.base_hourly_wage,
           effective_from: Date.current
         )
+        # 時給を更新して保存する（なければ新規作成、あれば更新）
+        history.wage = @user.base_hourly_wage
+        history.save!
       end
       if details.any?
         create_admin_log(
