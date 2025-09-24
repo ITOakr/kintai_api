@@ -27,7 +27,7 @@ class DailySummaryService
       total_wage: total_wage,
       wage_rows: part_time_wage_summary[:rows],
       food_costs_total: food_costs_total,
-      full_time_employee_count: fixed_cost_record&.full_time_employee_count || 0,
+      full_time_employee_count: fixed_cost_record ? fixed_cost_record.full_time_employee_count : 1,
       l_ratio: l_ratio,
       f_ratio: f_ratio,
       f_l_ratio: f_l_ratio
