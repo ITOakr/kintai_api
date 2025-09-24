@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_09_22_094856) do
+ActiveRecord::Schema[8.0].define(version: 2025_09_24_085918) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -23,6 +23,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_09_22_094856) do
     t.datetime "updated_at", null: false
     t.index ["admin_user_id"], name: "index_admin_logs_on_admin_user_id"
     t.index ["target_user_id"], name: "index_admin_logs_on_target_user_id"
+  end
+
+  create_table "daily_fixed_costs", force: :cascade do |t|
+    t.date "date", null: false
+    t.integer "full_time_employee_count", default: 0, null: false
+    t.integer "daily_wage_per_employee", default: 10800, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["date"], name: "index_daily_fixed_costs_on_date", unique: true
   end
 
   create_table "food_costs", force: :cascade do |t|

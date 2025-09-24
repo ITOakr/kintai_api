@@ -7,20 +7,27 @@ class DailySummaryService
   def perform
     sales_record = fetch_sales
     food_costs_total = fetch_food_costs_total
-    wage_summary = calculate_wage_summary
+
+    fixed_cost_record = fetch_fixed_costs
+    part_time_wage_summary = calculate_part_time_wage_summary
+    fixed_wage = (fixed_cost_record&.full_time_employee_count || 0) * (fixed_cost_record&.daily_wage_per_employee || 10800)
+    total_wage = part_time_wage_summary[:total_daily_wage] + fixed_wage
 
     # 各比率を計算
-    l_ratio = calculate_ratio(wage_summary[:total_daily_wage], sales_record&.amount_yen)
+    l_ratio = calculate_ratio(total_wage, sales_record&.amount_yen)
     f_ratio = calculate_ratio(food_costs_total, sales_record&.amount_yen)
-    f_l_ratio = calculate_ratio(wage_summary[:total_daily_wage] + food_costs_total, sales_record&.amount_yen)
+    f_l_ratio = calculate_ratio(total_wage + food_costs_total, sales_record&.amount_yen)
 
     {
       date: @date.to_s,
       sales: sales_record&.amount_yen,
       sales_note: sales_record&.note,
-      total_wage: wage_summary[:total_daily_wage],
-      wage_rows: wage_summary[:rows],
+      part_time_wage: part_time_wage_summary[:total_daily_wage],
+      fixed_wage: fixed_wage,
+      total_wage: total_wage,
+      wage_rows: part_time_wage_summary[:rows],
       food_costs_total: food_costs_total,
+      full_time_employee_count: fixed_cost_record&.full_time_employee_count || 0,
       l_ratio: l_ratio,
       f_ratio: f_ratio,
       f_l_ratio: f_l_ratio
@@ -37,7 +44,11 @@ class DailySummaryService
     FoodCost.where(date: @date).sum(:amount_yen)
   end
 
-  def calculate_wage_summary
+  def fetch_fixed_costs
+    DailyFixedCost.find_by(date: @date)
+  end
+
+  def calculate_part_time_wage_summary
     day_start = @tz.parse("#{@date} 00:00")
     day_end = @tz.parse("#{@date} 23:59:59") + 1.second
     range = day_start...(day_end - 1.second)

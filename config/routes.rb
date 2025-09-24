@@ -26,6 +26,8 @@ Rails.application.routes.draw do
     get "food_costs", to: "food_costs#show"
     put "food_costs", to: "food_costs#upsert"
 
+    put "daily_fixed_costs", to: "daily_fixed_costs#upsert"
+
     get "daily_summary", to: "daily_summary#show"
     get "monthly_summary", to: "monthly_summary#show"
 
