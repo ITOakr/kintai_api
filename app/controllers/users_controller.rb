@@ -14,6 +14,11 @@ class UsersController < ApplicationController
     user = User.new(user_params)
     user.status = :pending
     if user.save
+      Notification.create!(
+        message: "#{user.name}さんから新しい登録申請がありました。",
+        notification_type: :user_approval_request,
+        link_to: "/users"
+      )
       render json: { message: "ユーザー登録の申請を受け付けました。管理者の承認をお待ちください。" }, status: :created
     else
       render json: { error: user.errors.full_messages }, status: :unprocessable_entity

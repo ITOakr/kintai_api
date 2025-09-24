@@ -32,5 +32,6 @@ Rails.application.routes.draw do
     get "monthly_summary", to: "monthly_summary#show"
 
     resources :admin_logs, only: [ :index ]
+    resources :notifications, only: [ :index, :update ]
   end
 end
