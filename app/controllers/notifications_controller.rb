@@ -22,6 +22,9 @@ class NotificationsController < ApplicationController
   private
 
   def set_notification
-    @notification = Notification.find(params[:id])
+    @notification = Notification.find_by(id: params[:id])
+    unless @notification
+      render json: { error: "Notification not found" }, status: :not_found
+    end
   end
 end
