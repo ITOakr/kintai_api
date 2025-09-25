@@ -33,7 +33,7 @@ class UsersController < ApplicationController
 
   # PATCH /users/:id/approve
   def approve
-    service = UserApprovalService.new(@user, approve_params, current_user)
+    service = UserApprovalService.new(@user, role_and_wage_params, current_user)
     if service.perform
       render json: { message: "#{@user.name}さんを承認しました。" }, status: :ok
     else
@@ -43,7 +43,7 @@ class UsersController < ApplicationController
 
   # PATCH /users/:id
   def update
-    service = UserUpdateService.new(@user, user_update_params, current_user)
+    service = UserUpdateService.new(@user, role_and_wage_params, current_user)
     if service.perform
       render json: { message: "#{@user.name}さんの情報を更新しました。" }, status: :ok
     else
@@ -68,11 +68,7 @@ class UsersController < ApplicationController
 
   private
 
-  def approve_params
-    params.permit(:role, :base_hourly_wage)
-  end
-
-  def user_update_params
+  def role_and_wage_params
     params.permit(:role, :base_hourly_wage)
   end
 

@@ -14,7 +14,7 @@
       "location": {
         "type": "method",
         "class": "UsersController",
-        "method": "user_update_params"
+        "method": "role_and_wage_params"
       },
       "user_input": ":role",
       "confidence": "Medium",
