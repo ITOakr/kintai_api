@@ -50,7 +50,7 @@ class UserUpdateService
       admin_user: @admin_user,
       action: "ユーザー情報更新",
       target_user: @user,
-      details: "#{@user.name}さんの情報を更新しました。\n " + details.join("\n")
+      details: "#{@user.name}さんの情報を更新しました。\n" + details.join("\n")
     )
   end
 end
