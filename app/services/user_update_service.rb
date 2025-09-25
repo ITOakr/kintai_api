@@ -40,8 +40,8 @@ class UserUpdateService
       user: @user,
       effective_from: Date.current
     )
-      history.wage = @user.base_hourly_wage
-      history.save!
+    history.wage = @user.base_hourly_wage
+    history.save!
   end
 
   def create_log_if_changed(details)
