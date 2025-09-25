@@ -15,49 +15,14 @@ class FoodCostsController < ApplicationController
   def upsert
     date = parse_date!(params[:date])
     return if performed?
+    service = UpsertFoodCostsService.new(date, food_cost_params, current_user)
 
-    # フロントエンドから送られてくる食材費リスト
-    food_cost_items = food_cost_params
-
-    # 変更前の値を保持
-    old_total_amount = FoodCost.where(date: date).sum(:amount_yen)
-    is_new_record = old_total_amount.zero?
-
-    # 一つでも保存に失敗したら全ての変更を元に戻す（トランザクション）
-    FoodCost.transaction do
-      # その日の食材費を一旦全削除
-      FoodCost.where(date: date).destroy_all
-
-      # 新しいデータを１つずつ保存
-      food_cost_items.each do |item|
-        FoodCost.create!(date: date, **item.to_h)
-      end
-    end
-
-    new_total_amount = food_cost_items.sum { |item| item[:amount_yen].to_i }
-
-    if is_new_record
-      action = "食材費登録"
-      details = "#{date}の食材費を「#{new_total_amount}円」で登録しました。"
+    if service.perform
+      new_food_costs = FoodCost.where(date: date)
+      render json: new_food_costs.map { |fc| serialize(fc) }, status: :ok
     else
-      action = "食材費更新"
-      details = "#{date}の食材費を「#{old_total_amount}円」から「#{new_total_amount}円」に更新しました。"
+      render json: { errors: service.errors }, status: :unprocessable_entity
     end
-
-    if old_total_amount != new_total_amount
-      # 変更があった場合の処理
-      create_admin_log(
-        action: action,
-        details: details
-      )
-    end
-
-    # 最新のデータを取得して返す
-    new_food_costs = FoodCost.where(date: date)
-    render json: new_food_costs.map { |fc| serialize(fc) }
-
-  rescue ActiveRecord::RecordInvalid => e
-    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   private

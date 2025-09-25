@@ -33,51 +33,21 @@ class UsersController < ApplicationController
 
   # PATCH /users/:id/approve
   def approve
-    if @user.update(approve_params)
-      WageHistory.create!(
-        user: @user,
-        wage: @user.base_hourly_wage,
-        effective_from: Date.current
-      )
-      create_admin_log(
-        action: "ユーザー承認",
-        target_user: @user,
-        details: "#{@user.name}さんを承認しました。"
-      )
+    service = UserApprovalService.new(@user, role_and_wage_params, current_user)
+    if service.perform
       render json: { message: "#{@user.name}さんを承認しました。" }, status: :ok
     else
-      render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
+      render json: { error: service.errors }, status: :unprocessable_entity
     end
   end
 
   # PATCH /users/:id
   def update
-    user_before_update = @user.dup
-    if @user.update(user_update_params)
-      details = []
-      if user_before_update.role != @user.role
-        details << "権限を「#{user_before_update.role_i18n}」から「#{@user.role_i18n}」に変更しました。"
-      end
-      if user_before_update.base_hourly_wage != @user.base_hourly_wage
-        details << "時給を「#{user_before_update.base_hourly_wage}円」から「#{@user.base_hourly_wage}円」に変更しました。"
-        history = WageHistory.find_or_initialize_by(
-          user: @user,
-          effective_from: Date.current
-        )
-        # 時給を更新して保存する（なければ新規作成、あれば更新）
-        history.wage = @user.base_hourly_wage
-        history.save!
-      end
-      if details.any?
-        create_admin_log(
-          action: "ユーザー情報更新",
-          target_user: @user,
-          details: "#{@user.name}さんの情報を更新しました。\n " + details.join("\n")
-        )
-      end
+    service = UserUpdateService.new(@user, role_and_wage_params, current_user)
+    if service.perform
       render json: { message: "#{@user.name}さんの情報を更新しました。" }, status: :ok
     else
-      render json: { error: @user.errors.full_messages }, status: :unprocessable_entity
+      render json: { error: service.errors }, status: :unprocessable_entity
     end
   end
 
@@ -98,11 +68,7 @@ class UsersController < ApplicationController
 
   private
 
-  def approve_params
-    params.permit(:role, :base_hourly_wage).merge(status: :active)
-  end
-
-  def user_update_params
+  def role_and_wage_params
     params.permit(:role, :base_hourly_wage)
   end
 

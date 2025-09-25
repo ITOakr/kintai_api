@@ -3,18 +3,18 @@
     {
       "warning_type": "Mass Assignment",
       "warning_code": 105,
-      "fingerprint": "3dc8ca6c9bef608e51a1baa95aa3cbf36bf5389b2ef8b2d4199f35826471efd8",
+      "fingerprint": "e2b94b7fd8f685d124b0119fcea85e40ecc92cfdc2e028fb56f31aebaca81ad7",
       "check_name": "PermitAttributes",
       "message": "Potentially dangerous key allowed for mass assignment",
       "file": "app/controllers/users_controller.rb",
-      "line": 63,
+      "line": 72,
       "link": "https://brakemanscanner.org/docs/warning_types/mass_assignment/",
       "code": "params.permit(:role, :base_hourly_wage)",
       "render_path": null,
       "location": {
         "type": "method",
         "class": "UsersController",
-        "method": "user_update_params"
+        "method": "role_and_wage_params"
       },
       "user_input": ":role",
       "confidence": "Medium",
