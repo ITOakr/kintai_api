@@ -36,6 +36,40 @@ module Attendance
       )
     end
 
+    def self.summarize_day_from_entries(entries)
+      return Result.new(status: "not_started") if entries.empty?
+
+      # enum により scope が生える: clock_in, clock_out
+      first_in_rec = entries.select(&:clock_in?).min_by(&:happened_at)
+      last_out_rec = entries.select(&:clock_out?).max_by(&:happened_at)
+
+      first_in = first_in_rec&.happened_at
+      last_out = last_out_rec&.happened_at
+
+      last_punch = entries.max_by(&:happened_at)
+      status = determine_status(last_punch)
+
+      date = entries.first.happened_at.to_date
+
+      details = calculate_attendance_details_from_entries(entries)
+      # 勤務時間の計算
+      work_mins = calculate_work_minutes(work_segments: details.work_segments)
+      # 休憩時間
+      break_mins = details.break_minutes
+      # 夜勤時間の計算
+      night_mins = calculate_night_minutes(work_segments: details.work_segments, date: date)
+
+      Result.new(
+        date: date,
+        start_at: first_in,
+        end_at: last_out,
+        work_minutes: work_mins,  # 休憩時間を差し引いた実働時間（マイナスにならないように）
+        break_minutes: break_mins,
+        night_minutes: night_mins,
+        status: status
+      )
+    end
+
     def self.calculate_work_minutes(work_segments:)
       total_seconds = work_segments.sum { |seg| seg.end - seg.begin }
       (total_seconds / 60).to_i
@@ -88,6 +122,53 @@ module Attendance
       range = date.beginning_of_day..date.end_of_day
       entries = TimeEntry.where(user_id: user_id, happened_at: range).order(:happened_at)
 
+      work_segments = []
+      total_break_seconds = 0
+      state = :off
+      cur_start = nil
+      break_start = nil
+
+      entries.each do |e|
+        case e.kind.to_s
+        when "clock_in"
+          if state == :off
+            state = :on
+            cur_start = e.happened_at
+          end
+        when "break_start"
+          if state == :on
+            work_segments << (cur_start...e.happened_at) if cur_start && e.happened_at > cur_start
+            state = :break
+            break_start = e.happened_at
+          end
+        when "break_end"
+          if state == :break
+            state = :on
+            cur_start = e.happened_at
+            total_break_seconds += (e.happened_at - break_start) if break_start && e.happened_at > break_start
+          end
+        when "clock_out"
+          if state == :on
+            work_segments << (cur_start...e.happened_at) if cur_start && e.happened_at > cur_start
+            state = :off
+            cur_start = nil
+            break_start = nil
+          elsif state == :break
+            # 休憩中に退勤した場合、休憩時間は加算しない
+            state = :off
+            cur_start = nil
+            break_start = nil
+          end
+        end
+      end
+
+      AttendanceDetails.new(
+        work_segments: work_segments,
+        break_minutes: (total_break_seconds / 60).to_i
+      )
+    end
+
+    def self.calculate_attendance_details_from_entries(entries)
       work_segments = []
       total_break_seconds = 0
       state = :off
