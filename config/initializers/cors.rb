@@ -17,7 +17,7 @@
 origins = [
   "http://localhost:5173",          # Vite dev
   "https://flan-for-employee.vercel.app", # 後で実際のVercel URLに置換
-  "https://flan-for-admin.vercel.app/"     # すでに作るつもりなら先行でOK
+  "https://flan-for-admin.vercel.app"     # すでに作るつもりなら先行でOK
 ]
 
 Rails.application.config.middleware.insert_before 0, Rack::Cors do
