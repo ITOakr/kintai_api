@@ -117,7 +117,7 @@ class MonthlySummaryService
       user = users_by_id[user_id]
       next 0 unless user
 
-      summary = Attendance::Calculator.summarize_day(user_id: user_id, date: date)
+      summary = Attendance::Calculator.summarize_day_from_entries(entries)
       next 0 if summary.work_minutes.to_i.zero?
 
       wage_for_the_day = wages_by_user_id[user_id] || user.base_hourly_wage
