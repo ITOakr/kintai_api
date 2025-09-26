@@ -19,12 +19,10 @@ class MonthlySummaryService
     user_ids = time_entries_by_date.values.flatten.map(&:user_id).uniq
     users_by_id = User.where(id: user_ids).index_by(&:id)
 
-    wage_histories = WageHistory.where(user_id: user_ids)
-                                .where("effective_from <= ?", @end_date)
-                                .order(:user_id, effective_from: :desc)
-
-    wages_by_user_id = wage_histories.group_by(&:user_id)
-                                     .transform_values { |histories| histories.first&.wage }
+    wage_histories_by_user = WageHistory.where(user_id: user_ids)
+                                        .where("effective_from <= ?", @end_date)
+                                        .order(:effective_from) # 日付の昇順でソート
+                                        .group_by(&:user_id)
 
     cumulative_sales = 0
     cumulative_food_costs = 0
@@ -40,7 +38,7 @@ class MonthlySummaryService
         date,
         time_entries_by_date[date] || [], # その日の勤怠データだけを渡す
         users_by_id,
-        wages_by_user_id
+        wage_histories_by_user
       )
 
       fixed_wage = (fixed_cost&.full_time_employee_count || 0) * (fixed_cost&.daily_wage_per_employee || 10800)
@@ -111,7 +109,7 @@ class MonthlySummaryService
     (numerator.to_f / denominator.to_f).round(4)
   end
 
-  def calculate_part_time_wage_for_day(date, time_entries, users_by_id, wages_by_user_id)
+  def calculate_part_time_wage_for_day(date, time_entries, users_by_id, wage_histories_by_user)
     entries_by_user_id = time_entries.group_by(&:user_id)
     total_wage = entries_by_user_id.sum do |user_id, entries|
       user = users_by_id[user_id]
@@ -120,7 +118,10 @@ class MonthlySummaryService
       summary = Attendance::Calculator.summarize_day_from_entries(entries)
       next 0 if summary.work_minutes.to_i.zero?
 
-      wage_for_the_day = wages_by_user_id[user_id] || user.base_hourly_wage
+      user_histories = wage_histories_by_user[user_id] || []
+      applicable_history = user_histories.select { |h| h.effective_from <= date }.last
+      wage_for_the_day = applicable_history ? applicable_history.wage : user.base_hourly_wage
+
       ::Payroll::Calculator.daily_wage(
         base: wage_for_the_day,
         work_minutes: summary.work_minutes,
