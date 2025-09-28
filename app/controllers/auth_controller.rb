@@ -1,8 +1,6 @@
 class AuthController < ApplicationController
   # POST /auth/login
   def login
-    
-    
     user = User.find_by(email: login_params[:email])
     if user&.authenticate(login_params[:password])
       # 認証は成功したが，承認されていない場合は拒否
