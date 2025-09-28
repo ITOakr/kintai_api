@@ -1,8 +1,8 @@
 class AuthController < ApplicationController
   # POST /auth/login
   def login
-    puts "--- RECEIVED PARAMS ---"
-    puts params.to_unsafe_h.inspect
+    
+    
     user = User.find_by(email: login_params[:email])
     if user&.authenticate(login_params[:password])
       # 認証は成功したが，承認されていない場合は拒否
