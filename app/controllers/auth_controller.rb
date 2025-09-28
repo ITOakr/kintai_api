@@ -1,8 +1,8 @@
 class AuthController < ApplicationController
   # POST /auth/login
   def login
-    user = User.find_by(email: params[:email])
-    if user&.authenticate(params[:password])
+    user = User.find_by(email: login_params[:email])
+    if user&.authenticate(login_params[:password])
       # 認証は成功したが，承認されていない場合は拒否
       unless user.status_active?
         return render json: { error: "このアカウントは管理者によってまだ認証されていません" }, status: :unauthorized
@@ -18,5 +18,11 @@ class AuthController < ApplicationController
   def me
     authenticate!
     render json: { id: current_user.id, email: current_user.email, name: current_user.name, role: current_user.role }
+  end
+
+  private
+
+  def login_params
+    params.require(:auth).permit(:email, :password)
   end
 end
