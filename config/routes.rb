@@ -31,6 +31,9 @@ Rails.application.routes.draw do
     get "daily_summary", to: "daily_summary#show"
     get "monthly_summary", to: "monthly_summary#show"
 
+    get "daily_report", to: "daily_reports#show"
+    put "daily_report", to: "daily_reports#upsert"
+
     resources :admin_logs, only: [ :index ]
     resources :notifications, only: [ :index, :update ]
   end
