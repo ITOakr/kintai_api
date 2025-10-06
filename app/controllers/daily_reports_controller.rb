@@ -2,8 +2,6 @@ class DailyReportsController < ApplicationController
   before_action :authenticate!
   before_action :require_admin!
 
-    before_action :authenticate!
-  before_action :require_admin!
 
   def show
     date = Date.parse(params.require(:date))
