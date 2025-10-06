@@ -10,7 +10,8 @@ class MonthlySummaryService
     last_year_data = calculate_monthly_data(@year - 1, @month)
 
     last_year_ratios = last_year_data[:days].each_with_object({}) do |day, hash|
-      hash[Date.parse(day[:date]).day] = day[:cumulative_f_l_ratio]
+      day_number = Date.parse(day[:date]).day
+      hash[day_number] = day[:cumulative_f_l_ratio]
     end
 
     this_year_data[:days].each do |day|
