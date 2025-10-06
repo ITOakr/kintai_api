@@ -2,17 +2,37 @@ class MonthlySummaryService
   def initialize(year, month)
     @year = year
     @month = month
-    @start_date = Date.new(@year, @month, 1)
-    @end_date = @start_date.end_of_month
-    @date_range = @start_date..@end_date
   end
 
   def perform
-    # 月全体の売上と食材費をまとめて取得
-    sales_by_date = Sale.where(date: @date_range).index_by(&:date)
-    food_costs_by_date = FoodCost.where(date: @date_range).group(:date).sum(:amount_yen)
-    fixed_costs_by_date = DailyFixedCost.where(date: @date_range).index_by(&:date)
-    time_entries_by_date = TimeEntry.where(happened_at: @start_date.beginning_of_day..@end_date.end_of_day)
+    this_year_data = calculate_monthly_data(@year, @month)
+
+    last_year_data = calculate_monthly_data(@year - 1, @month)
+
+    last_year_ratios = last_year_data[:days].each_with_object({}) do |day, hash|
+      hash[Date.parse(day[:date]).day] = day[:cumulative_f_l_ratio]
+    end
+
+    this_year_data[:days].each do |day|
+      day_number = Date.parse(day[:date]).day
+      day[:last_year_cumulative_f_l_ratio] = last_year_ratios[day_number]
+    end
+    this_year_data
+  end
+
+  private
+
+  def calculate_monthly_data(year, month)
+    start_date = Date.new(year, month, 1)
+    end_date = start_date.end_of_month
+    date_range = start_date..end_date
+
+    # (... performメソッドの元々の処理をここに移動 ...)
+    # 以下、月次データを計算するロジックは省略（内容は元のまま）
+    sales_by_date = Sale.where(date: date_range).index_by(&:date)
+    food_costs_by_date = FoodCost.where(date: date_range).group(:date).sum(:amount_yen)
+    fixed_costs_by_date = DailyFixedCost.where(date: date_range).index_by(&:date)
+    time_entries_by_date = TimeEntry.where(happened_at: start_date.beginning_of_day..end_date.end_of_day)
                                     .order(:happened_at)
                                     .group_by { |te| te.happened_at.to_date }
 
@@ -20,15 +40,14 @@ class MonthlySummaryService
     users_by_id = User.where(id: user_ids).index_by(&:id)
 
     wage_histories_by_user = WageHistory.where(user_id: user_ids)
-                                        .where("effective_from <= ?", @end_date)
+                                        .where("effective_from <= ?", end_date)
                                         .order(:effective_from) # 日付の昇順でソート
                                         .group_by(&:user_id)
-
     cumulative_sales = 0
     cumulative_food_costs = 0
     cumulative_wage = 0
 
-    days_data = (@start_date..@end_date).map do |date|
+    days_data = (start_date..end_date).map do |date|
       sale = sales_by_date[date]
       food_cost_total = food_costs_by_date[date] || 0
       fixed_cost = fixed_costs_by_date[date]
@@ -90,8 +109,8 @@ class MonthlySummaryService
     monthly_f_l_ratio = calculate_ratio(monthly_wage + monthly_food_costs, monthly_sales)
 
     {
-      year: @year,
-      month: @month,
+      year: year,
+      month: month,
       days: days_data,
       monthly_sales: monthly_sales,
       monthly_wage: monthly_wage,
@@ -101,8 +120,6 @@ class MonthlySummaryService
       monthly_f_l_ratio: monthly_f_l_ratio
     }
   end
-
-  private
 
   def calculate_ratio(numerator, denominator)
     return nil if denominator.nil? || denominator.to_i <= 0
