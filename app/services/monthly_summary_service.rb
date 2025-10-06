@@ -28,7 +28,6 @@ class MonthlySummaryService
     date_range = start_date..end_date
 
     # (... performメソッドの元々の処理をここに移動 ...)
-    # 以下、月次データを計算するロジックは省略（内容は元のまま）
     sales_by_date = Sale.where(date: date_range).index_by(&:date)
     food_costs_by_date = FoodCost.where(date: date_range).group(:date).sum(:amount_yen)
     fixed_costs_by_date = DailyFixedCost.where(date: date_range).index_by(&:date)
