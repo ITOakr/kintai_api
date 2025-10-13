@@ -7,8 +7,8 @@ class DailySummaryService
   def perform
     sales_record = fetch_sales
     food_costs_total = fetch_food_costs_total
-
     fixed_cost_record = fetch_fixed_costs
+
     part_time_wage_summary = calculate_part_time_wage_summary
     fixed_wage = (fixed_cost_record&.full_time_employee_count || 0) * (fixed_cost_record&.daily_wage_per_employee || 10800)
     total_wage = part_time_wage_summary[:total_daily_wage] + fixed_wage
@@ -48,12 +48,15 @@ class DailySummaryService
     DailyFixedCost.find_by(date: @date)
   end
 
+  # 勤怠データをもとにパートタイムの賃金サマリーを計算する
   def calculate_part_time_wage_summary
     day_start = @tz.parse("#{@date} 00:00")
     day_end = @tz.parse("#{@date} 23:59:59") + 1.second
     range = day_start...(day_end - 1.second)
 
+    # その日に勤務したことがあるユーザーidを重なりがないように取得
     user_ids = TimeEntry.where(happened_at: range).distinct.pluck(:user_id)
+    # 特定したユーザー情報を取得
     users = User.where(id: user_ids).select(:id, :name, :base_hourly_wage)
     users_by_id = users.index_by(&:id)
 
@@ -61,8 +64,10 @@ class DailySummaryService
                                 .where("effective_from <= ?", @date)
                                 .order(:user_id, effective_from: :desc)
 
+    # user_idごとに最新の履歴を1件だけ抽出し、user_idをキー、wageを値としたハッシュに変換
     wages_by_user_id = wage_histories.group_by(&:user_id).transform_values { |histories| histories.first&.wage }
 
+    # 時給履歴がない（時給変更を一度も行なっていない）場合は、ユーザーのbase_hourly_wageを使用する
     users.each do |user|
       wages_by_user_id[user.id] ||= user.base_hourly_wage
     end
@@ -71,10 +76,12 @@ class DailySummaryService
     total = 0
     user_ids.each do |uid|
       user = users_by_id[uid]
+      # ユーザーが存在しない場合はスキップ
       next unless user
 
       wage_for_the_day = wages_by_user_id[uid] || user.base_hourly_wage.to_i
 
+      # ユーザーの勤務時間を計算
       summary = Attendance::Calculator.summarize_day(user_id: uid, date: @date)
       next if summary.work_minutes.to_i <= 0
 

@@ -9,6 +9,7 @@ class ApplicationController < ActionController::API
     # ヘッダーに"Authorization"がない場合はエラーを返す
     return render json: { error: "missing_token" }, status: :unauthorized if header.blank?
     token = header.split(" ").last
+    # トークンをデコードしてユーザーを取得
     payload = JsonWebToken.decode(token)
     @current_user = User.find(payload["sub"])
     # JWTのデコードやユーザーの検索に失敗した場合は「無効なトークン」としてエラーを返す
