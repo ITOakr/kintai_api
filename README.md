@@ -83,6 +83,8 @@
 
 ## ER図
 
+### ユーザー関連
+
 ```mermaid
 erDiagram
     users {
@@ -94,7 +96,6 @@ erDiagram
         integer base_hourly_wage
         integer status
     }
-
     time_entries {
         bigint id PK
         integer user_id FK
@@ -102,29 +103,26 @@ erDiagram
         datetime happened_at
         string source
     }
-
     wage_histories {
         bigint id PK
         bigint user_id FK
         integer wage
         date effective_from
     }
+    users ||--o{ time_entries : "has"
+    users ||--o{ wage_histories : "has"
+```
 
-    admin_logs {
-        bigint id PK
-        bigint admin_user_id FK
-        bigint target_user_id FK
-        string action
-        text details
-    }
+### 日次データ関連
 
+```mermaid
+erDiagram
     sales {
         bigint id PK
         date date
         integer amount_yen
         string note
     }
-
     food_costs {
         bigint id PK
         date date
@@ -132,20 +130,29 @@ erDiagram
         integer amount_yen
         string note
     }
-
     daily_fixed_costs {
         bigint id PK
         date date
         integer full_time_employee_count
         integer daily_wage_per_employee
     }
-
     daily_reports {
         bigint id PK
         date date
         text content
     }
+```
 
+### システム・ログ関連
+```mermaid
+erDiagram
+    admin_logs {
+        bigint id PK
+        bigint admin_user_id FK
+        bigint target_user_id FK
+        string action
+        text details
+    }
     notifications {
         bigint id PK
         text message
@@ -153,9 +160,10 @@ erDiagram
         string notification_type
         string link_to
     }
-
-    users ||--o{ time_entries : "has"
-    users ||--o{ wage_histories : "has"
-    users ||--o{ admin_logs : "performed"
-    users ||--o{ admin_logs : "was target of"
+    users {
+        bigint id PK
+        string name
+    }
+    users ||--o{ admin_logs : "logs (as admin)"
+    users ||--o{ admin_logs : "logs (as target)"
 ```
